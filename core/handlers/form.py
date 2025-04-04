@@ -1,8 +1,11 @@
-from aiogram import Router
+from aiogram import Bot, Router
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext  # 'этот класс отвечает за реализацию машины состояний
+from apscheduler.schedulers.asyncio import AsyncIOScheduler  # планировщик задач
 from core.utils.states_form import StepsForm  # класс состояний
+from core.handlers.apsched import send_message_middleware
+from datetime import datetime, timedelta
 
 router_fsm = Router()
 
@@ -22,7 +25,7 @@ async def get_name(message: Message, state: FSMContext):
 
 
 @router_fsm.message(StepsForm.GET_LAST_NAME)
-async def get_name(message: Message, state: FSMContext):
+async def get_last_name(message: Message, state: FSMContext):
     await message.answer(f"Твоя фамилия: {message.text}\n"
                          f"Теперь введи возраст.")
     await state.update_data(last_name=message.text)  # сохраним фамилию
@@ -30,7 +33,7 @@ async def get_name(message: Message, state: FSMContext):
 
 
 @router_fsm.message(StepsForm.GET_AGE)
-async def get_name(message: Message, state: FSMContext):
+async def get_age(message: Message, bot: Bot, state: FSMContext, apscheduler: AsyncIOScheduler):
     await message.answer(f"Твой возраст: {message.text}")
     context_data = await state.get_data()  # получим сохраненные в FSM данные
     await message.answer(f"Сохраненные данные:\n{str(context_data)}")  # отправим данные пользователю
@@ -41,3 +44,5 @@ async def get_name(message: Message, state: FSMContext):
                  f"Возраст: {message.text}")
     await message.answer(data_user)
     await state.clear()  # очистим машину состояний
+    apscheduler.add_job(send_message_middleware, trigger='date', run_date=datetime.now() + timedelta(seconds=20),
+                        kwargs={'bot': bot, 'chat_id': message.from_user.id})

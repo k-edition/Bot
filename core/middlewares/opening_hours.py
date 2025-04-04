@@ -15,7 +15,7 @@ class OpeningHoursMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any]
     ) -> Any:
-        if not opening_hours():
+        if opening_hours():
             return await handler(event, data)
         await event.answer('Время работы бота:\n'
                            'Пн-пт с 8 до 18ч. Приходите в рабочие часы.')

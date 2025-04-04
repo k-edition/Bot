@@ -10,6 +10,7 @@ from core.handlers.form import router_fsm
 from core.middlewares.counter_middleware import CounterMiddleware
 from core.middlewares.opening_hours import OpeningHoursMiddleware
 from core.middlewares.db_middleware import DbSession
+from core.middlewares.apsched_middleware import SchedulerMiddleware
 from core import admin
 
 
@@ -31,6 +32,7 @@ async def start():
     dp.message.middleware.register(OpeningHoursMiddleware())  # внимание! бот работает только в рабочие часы
     # dp.update.middleware.register(OpeningHoursMiddleware2())  # внимание! бот работает только в рабочие часы
     dp.update.middleware.register(DbSession(poll_connect))
+    dp.update.middleware.register(SchedulerMiddleware(admin.scheduler))
 
     dp.include_router(router)  # регистрируем роутеры
     dp.include_router(router_contact)
